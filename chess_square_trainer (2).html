@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chess Square Color Trainer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        #square {
+            font-size: 48px;
+            margin: 20px;
+        }
+        .button {
+            font-size: 24px;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            cursor: pointer;
+        }
+        .white-button {
+            background-color: white;
+            color: black;
+            border: 2px solid black;
+        }
+        .black-button {
+            background-color: black;
+            color: white;
+            border: 2px solid black;
+        }
+        #timer, #score, #leaderboard {
+            margin: 10px;
+            font-size: 18px;
+        }
+        #new-session {
+            margin-top: 20px;
+            font-size: 18px;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chess Square Color Trainer</h1>
+    <div id="square">A1</div>
+    <button class="button white-button" onclick="checkAnswer('White')">White</button>
+    <button class="button black-button" onclick="checkAnswer('Black')">Black</button>
+    <div id="timer">Time: 0.00s</div>
+    <div id="score">Score: 0/0</div>
+    <button id="new-session" onclick="startSession()">New Session</button>
+    <div id="leaderboard">
+        <h3>Leaderboard (Top 5 Fastest Times)</h3>
+        <ol id="leaderboard-list"></ol>
+    </div>
+
+    <script>
+        const squares = [];
+        const files = ['A','B','C','D','E','F','G','H'];
+        const ranks = ['1','2','3','4','5','6','7','8'];
+        for (let f of files) {
+            for (let r of ranks) {
+                squares.push(f + r);
+            }
+        }
+
+        let currentSquare = '';
+        let correct = 0;
+        let total = 0;
+        let startTime = 0;
+        let timerInterval = null;
+        let leaderboard = [];
+
+        function getColor(square) {
+            const fileIndex = files.indexOf(square[0]);
+            const rankIndex = ranks.indexOf(square[1]);
+            return (fileIndex + rankIndex) % 2 === 0 ? 'Black' : 'White';
+        }
+
+        function nextSquare() {
+            currentSquare = squares[Math.floor(Math.random() * squares.length)];
+            document.getElementById('square').textContent = currentSquare;
+        }
+
+        function checkAnswer(answer) {
+            if (!currentSquare) return;
+            const correctColor = getColor(currentSquare);
+            if (answer === correctColor) correct++;
+            total++;
+            document.getElementById('score').textContent = `Score: ${correct}/${total}`;
+            if (total >= 10) endSession();
+            else nextSquare();
+        }
+
+        function startSession() {
+            correct = 0;
+            total = 0;
+            document.getElementById('score').textContent = `Score: 0/0`;
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 100);
+            nextSquare();
+        }
+
+        function updateTimer() {
+            const elapsed = (Date.now() - startTime) / 1000;
+            document.getElementById('timer').textContent = `Time: ${elapsed.toFixed(2)}s`;
+        }
+
+        function endSession() {
+            clearInterval(timerInterval);
+            const elapsed = (Date.now() - startTime) / 1000;
+            leaderboard.push({ time: elapsed, score: correct });
+            leaderboard.sort((a, b) => a.time - b.time);
+            leaderboard = leaderboard.slice(0, 5);
+            updateLeaderboard();
+            currentSquare = '';
+        }
+
+        function updateLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            leaderboard.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = `Time: ${entry.time.toFixed(2)}s, Score: ${entry.score}/10`;
+                list.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
